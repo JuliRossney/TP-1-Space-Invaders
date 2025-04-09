@@ -1,6 +1,8 @@
 import pygame
 import sys
-print("holaa")
+
+print("chauu")
+
 pygame.init()
 
 ancho = 600
