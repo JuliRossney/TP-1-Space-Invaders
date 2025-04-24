@@ -3,89 +3,18 @@ import sys
 import random
 import os
 
+#ventana
 pygame.init()
 pantalla = pygame.display.set_mode((400, 600))
 pygame.display.set_caption("Space Invaders - Juli Rossney")
 reloj = pygame.time.Clock()
 
-#fondo
+#fondo del juego, infinito, velocidad del fondo
 tema_fondo = pygame.image.load("image.png").convert()
 tema_fondo = pygame.transform.scale(tema_fondo, (400, 600))
 y1 = 0
 y2 = -600
 velocidad_scroll = 1
-
-#colores
-BLANCO = (255, 255, 255)
-ROSA = (255, 192, 203)
-VIOLETA = (120, 0, 90)
-
-#fuentes, titulo
-fuente = pygame.font.SysFont("Arial", 32)
-fuente_pixel = pygame.font.Font("pixel.ttf", 38)  
-
-#botones menu
-botonjugar = pygame.image.load("botonjugar.png")
-botonjugar = pygame.transform.scale(botonjugar,(300, 100))
-jugar = pygame.image.load("jugar.png")
-jugar = pygame.transform.scale(jugar,(300, 100))
-boton  = botonjugar.get_rect(topleft=(300, 100))
-
-botonmulti = pygame.image.load("botonmulti.png")
-botonmulti = pygame.transform.scale(botonmulti,(300, 100))
-multi = pygame.image.load("multi.png")
-
-botoncreditos = pygame.image.load("botoncreditos.png")
-botoncreditos = pygame.transform.scale(botoncreditos,(300, 100))
-creditos = pygame.image.load("creditos.png")
-
-botontutorial = pygame.image.load("botontutorial.png")
-botontutorial = pygame.transform.scale(botontutorial,(300, 100))
-tutorial = pygame.image.load("tutorial.png")
-
-botonsalir = pygame.image.load("botonsalir.png")
-botonsalir = pygame.transform.scale(botonsalir,(300, 100))
-salir = pygame.image.load("salir.png")
-
-#jugador
-nave_img = pygame.image.load("nave.png")
-nave_img = pygame.transform.scale(nave_img, (60, 60))
-nave_rect = nave_img.get_rect(center=(200, 550))
-
-nave2_img = pygame.image.load("nave.png")
-nave2_img = pygame.transform.scale(nave2_img, (60, 60))
-nave2_rect = nave2_img.get_rect(center=(100, 550))
-balas2 = [] 
-
-#bala
-bala_img = pygame.image.load("bala.png")
-bala_img = pygame.transform.scale(bala_img, (10, 20))
-balas = []
-for bala in balas:
-    pantalla.blit(bala_img, bala)
-
-
-#bichos
-enemigo_img = pygame.image.load("bicho.png")
-enemigo_img = pygame.transform.scale(enemigo_img, (40, 40))
-enemigos = []
-
-#puntos
-puntos = 0
-
-#colores titulo cambiando
-colores_titulo = [(255, 105, 180), (255, 182, 193), (255, 20, 147), (255, 192, 203)]
-indice_color = 0
-contador_cambio_color = 0
-
-def boton_jugar(surface): 
-    Posi_mouse = pygame.mouse.get_pos()
-    if boton.collidepoint(Posi_mouse):
-        surface.blit(botonjugar, boton.topleft)
-    else:
-        surface.blit(jugar, boton.topleft)
-
-#fondo en movimiento
 def mostrar_fondo():
     global y1, y2
     y1 += velocidad_scroll
@@ -97,8 +26,64 @@ def mostrar_fondo():
     pantalla.blit(tema_fondo, (0, y1))
     pantalla.blit(tema_fondo, (0, y2))
 
-def mostrar_texto(texto, x, y, color=BLANCO):
-    render = fuente.render(texto, True, color)
+#colores, textos
+BLANCO = (255, 255, 255)
+ROSA = (213, 56, 126)
+VIOLETA = (120, 0, 90)
+
+#fuentes, titulo
+fuente = pygame.font.SysFont("Arial", 32)
+fuente_pixel = pygame.font.Font("pixel.ttf", 38)  
+fuente_tutorial = pygame.font.Font("pixel.ttf", 17) 
+
+#botones menu
+botonjugar = pygame.image.load("botonjugar.png")
+botonjugar = pygame.transform.scale(botonjugar,(300, 100))
+
+botonmulti = pygame.image.load("botonmulti.png")
+botonmulti = pygame.transform.scale(botonmulti,(300, 100))
+
+botoncreditos = pygame.image.load("botoncreditos.png")
+botoncreditos = pygame.transform.scale(botoncreditos,(300, 100))
+
+botontutorial = pygame.image.load("botontutorial.png")
+botontutorial = pygame.transform.scale(botontutorial,(300, 100))
+
+botonsalir = pygame.image.load("botonsalir.png")
+botonsalir = pygame.transform.scale(botonsalir,(300, 100))
+
+#naves 
+nave_img = pygame.image.load("nave.png")
+nave_img = pygame.transform.scale(nave_img, (60, 60))
+nave_rect = nave_img.get_rect(center=(200, 550))
+
+nave2_img = pygame.image.load("nave.png")
+nave2_img = pygame.transform.scale(nave2_img, (60, 60))
+nave2_rect = nave2_img.get_rect(center=(100, 550))
+
+#bala
+bala_img = pygame.image.load("bala.png")
+bala_img = pygame.transform.scale(bala_img, (10, 20))
+balas = []
+balas2 = [] 
+for bala in balas:
+    pantalla.blit(bala_img, bala)
+
+#bichos
+enemigo_img = pygame.image.load("bicho.png")
+enemigo_img = pygame.transform.scale(enemigo_img, (32, 32))
+enemigos = []
+
+#puntos
+puntos = 0
+
+#colores titulo cambiando
+colores_titulo = [(255, 105, 180), (255, 182, 193), (255, 20, 147), (255, 192, 203)]
+indice_color = 0
+contador_cambio_color = 0
+
+def mostrar_texto(texto, x, y, color=ROSA):
+    render = fuente_tutorial.render(texto, True, color)
     pantalla.blit(render, (x, y))
 
 #distribuir los bichos y su movimiento
@@ -106,10 +91,10 @@ def crear_enemigos():
     enemigos.clear()
     filas = 4
     columnas = 7
-    espacio_horizontal = 20
-    espacio_vertical = 20
-    ancho_bicho = 30
-    alto_bicho = 30
+    espacio_horizontal = 18
+    espacio_vertical = 18
+    ancho_bicho = 32
+    alto_bicho = 32
 
     for fila in range(filas):
         for columna in range(columnas):
@@ -179,7 +164,6 @@ def juego(modo):
         if teclas[pygame.K_RIGHT] and nave_rect.right < 400:
             nave_rect.x += 5
 
-        # Movimiento J2 solo en modo multijugador y con límite
         if modo == "multi":
             if teclas[pygame.K_a] and nave2_rect.left > 0:
                 nave2_rect.x -= 5
@@ -196,7 +180,6 @@ def juego(modo):
 
         mover_enemigos()
 
-        # Colisiones para ambos jugadores
         for lista_balas in [balas, balas2]:
             for bala in lista_balas[:]:
                 for enemigo in enemigos[:]:
@@ -216,7 +199,7 @@ def juego(modo):
             for bala in balas2:
                 pantalla.blit(bala_img, bala)
         dibujar_enemigos()
-        mostrar_texto(f"Puntaje: {score}", 10, 10)
+        mostrar_texto(f"PUNTAJE: {score}", 10, 10)
 
         pygame.display.flip()
         reloj.tick(60)
@@ -233,10 +216,12 @@ def mostrar_tutorial():
                 esperando = False
 
         mostrar_fondo()
-        mostrar_texto("Tutorial:", 150, 200)
-        mostrar_texto("Muevete con ← → y dispara con ESPACIO", 30, 250)
+        mostrar_texto("TUTORIAL:", 150, 200)
+        mostrar_texto("Movete con las flechas ← →. ↑ para disparar", 30, 250)
+        mostrar_texto("Multijugador: A-W-S", 30, 280)
         mostrar_texto("Elimina a todos los aliens para ganar!", 30, 300)
         mostrar_texto("Presiona cualquier tecla para volver", 30, 400)
+
         pygame.display.flip()
         reloj.tick(60)
 
