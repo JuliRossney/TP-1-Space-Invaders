@@ -3,18 +3,19 @@ import sys
 import random
 import os
 
-#ventana
+# ventana
 pygame.init()
 pantalla = pygame.display.set_mode((400, 600))
 pygame.display.set_caption("Space Invaders - Juli Rossney")
 reloj = pygame.time.Clock()
 
-#fondo del juego, infinito, velocidad del fondo
+# fondo del juego, infinito, velocidad del fondo
 tema_fondo = pygame.image.load("image.png").convert()
 tema_fondo = pygame.transform.scale(tema_fondo, (400, 600))
 y1 = 0
 y2 = -600
 velocidad_scroll = 1
+
 def mostrar_fondo():
     global y1, y2
     y1 += velocidad_scroll
@@ -26,33 +27,33 @@ def mostrar_fondo():
     pantalla.blit(tema_fondo, (0, y1))
     pantalla.blit(tema_fondo, (0, y2))
 
-#colores, textos
+# colores, textos
 BLANCO = (255, 255, 255)
 ROSA = (213, 56, 126)
 VIOLETA = (120, 0, 90)
 
-#fuentes, titulo
+# fuentes, título
 fuente = pygame.font.SysFont("Arial", 32)
-fuente_pixel = pygame.font.Font("pixel.ttf", 38)  
-fuente_tutorial = pygame.font.Font("pixel.ttf", 17) 
+fuente_pixel = pygame.font.Font("pixel.ttf", 38)
+fuente_tutorial = pygame.font.Font("pixel.ttf", 17)
 
-#botones menu
+# botones menú
 botonjugar = pygame.image.load("botonjugar.png")
-botonjugar = pygame.transform.scale(botonjugar,(300, 100))
+botonjugar = pygame.transform.scale(botonjugar, (300, 100))
 
 botonmulti = pygame.image.load("botonmulti.png")
-botonmulti = pygame.transform.scale(botonmulti,(300, 100))
+botonmulti = pygame.transform.scale(botonmulti, (300, 100))
 
 botoncreditos = pygame.image.load("botoncreditos.png")
-botoncreditos = pygame.transform.scale(botoncreditos,(300, 100))
+botoncreditos = pygame.transform.scale(botoncreditos, (300, 100))
 
 botontutorial = pygame.image.load("botontutorial.png")
-botontutorial = pygame.transform.scale(botontutorial,(300, 100))
+botontutorial = pygame.transform.scale(botontutorial, (300, 100))
 
 botonsalir = pygame.image.load("botonsalir.png")
-botonsalir = pygame.transform.scale(botonsalir,(300, 100))
+botonsalir = pygame.transform.scale(botonsalir, (300, 100))
 
-#naves 
+# naves
 nave_img = pygame.image.load("nave.png")
 nave_img = pygame.transform.scale(nave_img, (60, 60))
 nave_rect = nave_img.get_rect(center=(200, 550))
@@ -61,23 +62,23 @@ nave2_img = pygame.image.load("nave.png")
 nave2_img = pygame.transform.scale(nave2_img, (60, 60))
 nave2_rect = nave2_img.get_rect(center=(100, 550))
 
-#bala
+# bala
 bala_img = pygame.image.load("bala.png")
 bala_img = pygame.transform.scale(bala_img, (10, 20))
 balas = []
-balas2 = [] 
-for bala in balas:
-    pantalla.blit(bala_img, bala)
+balas2 = []
 
-#bichos
+# bichos
 enemigo_img = pygame.image.load("bicho.png")
 enemigo_img = pygame.transform.scale(enemigo_img, (32, 32))
 enemigos = []
+balas_enemigas = []  # balas disparadas por los aliens
+velocidad_bala_enemiga = 2
 
-#puntos
+# puntos
 puntos = 0
 
-#colores titulo cambiando
+# colores título cambiando
 colores_titulo = [(255, 105, 180), (255, 182, 193), (255, 20, 147), (255, 192, 203)]
 indice_color = 0
 contador_cambio_color = 0
@@ -86,7 +87,7 @@ def mostrar_texto(texto, x, y, color=ROSA):
     render = fuente_tutorial.render(texto, True, color)
     pantalla.blit(render, (x, y))
 
-#distribuir los bichos y su movimiento
+# distribuir los bichos y su movimiento
 def crear_enemigos():
     enemigos.clear()
     filas = 4
@@ -107,7 +108,7 @@ def dibujar_enemigos():
     for enemigo in enemigos:
         pantalla.blit(enemigo_img, enemigo)
 
-direccion = 1  
+direccion = 1
 def mover_enemigos():
     global direccion
     mover_abajo = False
@@ -122,24 +123,46 @@ def mover_enemigos():
         for enemigo in enemigos:
             enemigo.y += 10
 
+# disparo de los enemigos
+def disparar_enemigos():
+    for enemigo in enemigos:
+        if random.random() < 0.0005:  # probabilidad de disparo de cada alien
+            bala_enemiga = bala_img.get_rect(center=(enemigo.centerx, enemigo.bottom))
+            balas_enemigas.append(bala_enemiga)
+
+# mover las balas de los enemigos
+def mover_balas_enemigas():
+    global puntos
+    for bala in balas_enemigas[:]:
+        bala.y += velocidad_bala_enemiga
+        if bala.y > 600:  # si la bala se sale de la pantalla, la eliminamos
+            balas_enemigas.remove(bala)
+
+# detectar colisiones
 def detectar_colisiones():
-    global score
+    global puntos
     for bala in balas[:]:
         for enemigo in enemigos[:]:
             if bala.colliderect(enemigo):
                 balas.remove(bala)
                 enemigos.remove(enemigo)
-                score += 10
+                puntos += 10
                 break
 
+    for bala in balas_enemigas[:]:
+        if bala.colliderect(nave_rect):
+            return "game_over"  # Game Over si la bala toca la nave
+    return "jugando"
+
 def juego(modo):
-    global balas, enemigos, score, balas2
+    global balas, enemigos, puntos, balas2, balas_enemigas
     nave_rect.center = (200, 550)
     nave2_rect.center = (100, 550)
     balas = []
     balas2 = []
     enemigos = []
-    score = 0
+    balas_enemigas = []
+    puntos = 0
     crear_enemigos()
 
     jugando = True
@@ -158,7 +181,6 @@ def juego(modo):
 
         teclas = pygame.key.get_pressed()
 
-        # Movimiento J1 con límite
         if teclas[pygame.K_LEFT] and nave_rect.left > 0:
             nave_rect.x -= 5
         if teclas[pygame.K_RIGHT] and nave_rect.right < 400:
@@ -170,7 +192,6 @@ def juego(modo):
             if teclas[pygame.K_d] and nave2_rect.right < 400:
                 nave2_rect.x += 5
 
-        # Mover balas
         for bala in balas:
             bala.y -= 10
         for bala in balas2:
@@ -179,6 +200,8 @@ def juego(modo):
         balas2[:] = [b for b in balas2 if b.y > 0]
 
         mover_enemigos()
+        disparar_enemigos()
+        mover_balas_enemigas()
 
         for lista_balas in [balas, balas2]:
             for bala in lista_balas[:]:
@@ -186,8 +209,18 @@ def juego(modo):
                     if bala.colliderect(enemigo):
                         lista_balas.remove(bala)
                         enemigos.remove(enemigo)
-                        score += 10
+                        puntos += 10
                         break
+
+        estado_juego = detectar_colisiones()
+
+        if estado_juego == "game_over":
+            mostrar_fondo()
+            mostrar_texto("GAME OVER", 120, 250)
+            mostrar_texto(f"PUNTAJE FINAL: {puntos}", 100, 300)
+            pygame.display.flip()
+            pygame.time.wait(2000)
+            return
 
         mostrar_fondo()
         pantalla.blit(nave_img, nave_rect)
@@ -198,8 +231,10 @@ def juego(modo):
         if modo == "multi":
             for bala in balas2:
                 pantalla.blit(bala_img, bala)
+        for bala_enemiga in balas_enemigas:
+            pantalla.blit(bala_img, bala_enemiga)
         dibujar_enemigos()
-        mostrar_texto(f"PUNTAJE: {score}", 10, 10)
+        mostrar_texto(f"PUNTAJE: {puntos}", 10, 10)
 
         pygame.display.flip()
         reloj.tick(60)
