@@ -33,9 +33,10 @@ ROSA = (213, 56, 126)
 VIOLETA = (120, 0, 90)
 
 # fuentes, título
-fuente = pygame.font.SysFont("Arial", 32)
+#fuente = pygame.font.SysFont("Arial", 32)
 fuente_pixel = pygame.font.Font("pixel.ttf", 38)
-fuente_tutorial = pygame.font.Font("pixel.ttf", 17)
+fuente_p = pygame.font.Font("pixel.ttf", 20)
+fuente_tutorial = pygame.font.Font("pixel.ttf", 14)
 
 # botones menú
 botonjugar = pygame.image.load("botonjugar.png")
@@ -150,91 +151,106 @@ def detectar_colisiones():
                 break
 
     for bala in balas_enemigas[:]:
-        if bala.colliderect(nave_rect):
-            return "game_over"  # Game Over si la bala toca la nave
+        if nave_rect.colliderect(bala.inflate(-6, -6)):
+            return "game_over"
+
     return "jugando"
 
 def juego(modo):
-    global balas, enemigos, puntos, balas2, balas_enemigas
+    global balas, balas2, enemigos, balas_enemigas, puntos
+    # Reposición inicial
     nave_rect.center = (200, 550)
     nave2_rect.center = (100, 550)
-    balas = []
-    balas2 = []
-    enemigos = []
-    balas_enemigas = []
+    balas, balas2, balas_enemigas, enemigos = [], [], [], []
     puntos = 0
     crear_enemigos()
 
-    jugando = True
-    while jugando:
+    while True:
+        # — Eventos y disparos —
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_UP:
-                    bala_rect = bala_img.get_rect(center=(nave_rect.centerx, nave_rect.top))
-                    balas.append(bala_rect)
+                    balas.append(bala_img.get_rect(center=(nave_rect.centerx, nave_rect.top)))
                 if modo == "multi" and evento.key == pygame.K_w:
-                    bala2_rect = bala_img.get_rect(center=(nave2_rect.centerx, nave2_rect.top))
-                    balas2.append(bala2_rect)
+                    balas2.append(bala_img.get_rect(center=(nave2_rect.centerx, nave2_rect.top)))
 
+        # — Movimiento de naves —
         teclas = pygame.key.get_pressed()
-
         if teclas[pygame.K_LEFT] and nave_rect.left > 0:
             nave_rect.x -= 5
         if teclas[pygame.K_RIGHT] and nave_rect.right < 400:
             nave_rect.x += 5
-
         if modo == "multi":
             if teclas[pygame.K_a] and nave2_rect.left > 0:
                 nave2_rect.x -= 5
             if teclas[pygame.K_d] and nave2_rect.right < 400:
                 nave2_rect.x += 5
 
-        for bala in balas:
-            bala.y -= 10
-        for bala in balas2:
-            bala.y -= 10
-        balas[:] = [b for b in balas if b.y > 0]
-        balas2[:] = [b for b in balas2 if b.y > 0]
+        # — Mover balas propias —
+        for b in balas:   b.y -= 10
+        for b in balas2:  b.y -= 10
+        balas  = [b for b in balas  if b.y > 0]
+        balas2 = [b for b in balas2 if b.y > 0]
 
+        # — Enemigos disparan y se mueven —
         mover_enemigos()
         disparar_enemigos()
         mover_balas_enemigas()
 
-        for lista_balas in [balas, balas2]:
-            for bala in lista_balas[:]:
-                for enemigo in enemigos[:]:
-                    if bala.colliderect(enemigo):
-                        lista_balas.remove(bala)
-                        enemigos.remove(enemigo)
-                        puntos += 10
-                        break
+        # — 1) Si un alien cruza la Y de tu nave → Game Over —
+        for e in enemigos:
+            if e.bottom >= nave_rect.top:
+                mostrar_fondo()
+                t1 = fuente_p.render("GAME OVER", True, ROSA)
+                t2 = fuente_p.render(f"PUNTAJE FINAL: {puntos}", True, ROSA)
+                x1 = (400 - t1.get_width()) // 2
+                x2 = (400 - t2.get_width()) // 2
+                pantalla.blit(t1, (x1, 250))
+                pantalla.blit(t2, (x2, 300))
+                pygame.display.flip()
+                pygame.time.wait(2000)
+                return
 
-        estado_juego = detectar_colisiones()
-
-        if estado_juego == "game_over":
+        # — 2) Si no quedan enemigos → Game Over —
+        if not enemigos:
             mostrar_fondo()
-            mostrar_texto("GAME OVER", 120, 250)
-            mostrar_texto(f"PUNTAJE FINAL: {puntos}", 100, 300)
+            t1 = fuente_pixel.render("GAME OVER", True, ROSA)
+            t2 = fuente_pixel.render(f"PUNTAJE FINAL: {puntos}", True, ROSA)
+            x1 = (400 - t1.get_width()) // 2
+            x2 = (400 - t2.get_width()) // 2
+            pantalla.blit(t1, (x1, 250))
+            pantalla.blit(t2, (x2, 300))
             pygame.display.flip()
             pygame.time.wait(2000)
             return
 
+        # — 3) Colisiones bala→enemigo y bala_enemiga→nave —
+        estado = detectar_colisiones()
+        if estado == "game_over":
+            mostrar_fondo()
+            t1 = fuente_p.render("GAME OVER", True, ROSA)
+            t2 = fuente_p.render(f"PUNTAJE FINAL: {puntos}", True, ROSA)
+            x1 = (400 - t1.get_width()) // 2
+            x2 = (400 - t2.get_width()) // 2
+            pantalla.blit(t1, (x1, 250))
+            pantalla.blit(t2, (x2, 300))
+            pygame.display.flip()
+            pygame.time.wait(2000)
+            return
+
+        # — Dibujado final de frame —
         mostrar_fondo()
         pantalla.blit(nave_img, nave_rect)
         if modo == "multi":
             pantalla.blit(nave2_img, nave2_rect)
-        for bala in balas:
-            pantalla.blit(bala_img, bala)
-        if modo == "multi":
-            for bala in balas2:
-                pantalla.blit(bala_img, bala)
-        for bala_enemiga in balas_enemigas:
-            pantalla.blit(bala_img, bala_enemiga)
+        for b in balas + balas2 + balas_enemigas:
+            pantalla.blit(bala_img, b)
         dibujar_enemigos()
-        mostrar_texto(f"PUNTAJE: {puntos}", 10, 10)
+        punt_text = fuente_p.render(f"PUNTAJE: {puntos}", True, ROSA)
+        pantalla.blit(punt_text, (10, 10))
 
         pygame.display.flip()
         reloj.tick(60)
@@ -251,10 +267,12 @@ def mostrar_tutorial():
                 esperando = False
 
         mostrar_fondo()
-        mostrar_texto("TUTORIAL:", 150, 200)
-        mostrar_texto("Movete con las flechas ← →. ↑ para disparar", 30, 250)
-        mostrar_texto("Multijugador: A-W-S", 30, 280)
-        mostrar_texto("Elimina a todos los aliens para ganar!", 30, 300)
+        mostrar_texto("TUTORIAL:", 150, 180)
+        mostrar_texto("- Movete con las flechas", 30, 230)
+        mostrar_texto("  ← → ↑ para disparar", 30, 260)
+        mostrar_texto("- Multijugador: A-W-S", 30, 300)
+        mostrar_texto("- Elimina a todos", 30, 340)
+        mostrar_texto("  los aliens para ganar!", 30, 370)
         mostrar_texto("Presiona cualquier tecla para volver", 30, 400)
 
         pygame.display.flip()
